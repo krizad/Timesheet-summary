@@ -43,7 +43,7 @@ const parseHours = (timeStr: string): number => {
   return 0;
 };
 
-export const processTimesheetData = (data: TimesheetRow[]): TimesheetSummary => {
+export const calculateTimesheetSummary = (data: TimesheetRow[]): Omit<TimesheetSummary, 'rawRows'> => {
   // First, group by date to count records per day
   const recordsByDate = new Map<string, number>();
   data.forEach(row => {
@@ -52,8 +52,6 @@ export const processTimesheetData = (data: TimesheetRow[]): TimesheetSummary => 
     const date = row.Date;
     recordsByDate.set(date, (recordsByDate.get(date) || 0) + 1);
   });
-  
-  // Let's restart the implementation with a better structure.
   
   const summaryMap = new Map<string, Map<string, { manhours: number, mandays: number }>>();
 
@@ -125,6 +123,14 @@ export const processTimesheetData = (data: TimesheetRow[]): TimesheetSummary => 
   return {
     projects: summaries,
     totalWorkingDays: recordsByDate.size
+  };
+};
+
+export const processTimesheetData = (data: TimesheetRow[]): TimesheetSummary => {
+  const summary = calculateTimesheetSummary(data);
+  return {
+    ...summary,
+    rawRows: data
   };
 };
 

@@ -23,4 +23,5 @@ export interface ProjectSummary {
 export interface TimesheetSummary {
   projects: ProjectSummary[];
   totalWorkingDays: number;
+  rawRows?: TimesheetRow[];
 }
