@@ -18,6 +18,9 @@ export interface ProjectSummary {
   tasks: TaskSummary[];
   totalManhours: number;
   totalMandays: number;
+  startDate: string;
+  endDate: string;
+  dateRanges: { start: string; end: string }[];
 }
 
 export interface TimesheetSummary {

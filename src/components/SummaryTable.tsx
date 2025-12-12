@@ -20,82 +20,98 @@ export const SummaryTable: React.FC<SummaryTableProps> = ({ data, totalWorkingDa
     exportToExcel({ projects: data, totalWorkingDays }, 'timesheet_summary.xlsx');
   };
 
+  const formatDate = (dateStr: string) => {
+    if (!dateStr) return '-';
+    return new Date(dateStr).toLocaleDateString('th-TH', {
+      day: '2-digit',
+      month: 'short',
+      year: '2-digit'
+    });
+  };
+
   return (
     <div className="w-full max-w-4xl mx-auto mt-8 animate-fade-in">
-      <div className="bg-slate-900 border border-slate-800 rounded-lg overflow-hidden shadow-2xl">
-        <div className="bg-slate-950 px-6 py-4 border-b border-slate-800 flex flex-col sm:flex-row justify-between items-center gap-4">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg overflow-hidden shadow-xl">
+        <div className="bg-slate-50 dark:bg-slate-950 px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row justify-between items-center gap-4">
           <div className="flex items-center gap-4">
             <h2 className="text-lg font-mono text-emerald-400 flex items-center gap-2">
               <span className="text-slate-600">$</span> SUMMARY_REPORT
             </h2>
             <button
               onClick={handleExport}
-              className="flex items-center gap-2 px-3 py-1 text-xs font-mono font-medium text-slate-300 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded transition-colors"
+              className="flex items-center gap-2 px-3 py-1.5 text-xs font-mono font-bold text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 rounded-lg transition-colors shadow-sm"
             >
               <Download className="w-3 h-3" />
               EXPORT.XLSX
             </button>
           </div>
-          <div className="flex gap-6 text-sm font-mono">
-            <div className="text-slate-400">
-              WORKING_DAYS: <span className="text-emerald-400 ml-1">{totalWorkingDays}</span>
-            </div>
-            <div className="text-slate-400">
-              TOTAL_HOURS: <span className="text-emerald-400 ml-1">{grandTotalManhours.toFixed(2)}</span>
-            </div>
-            <div className="text-slate-400">
-              TOTAL_MANDAYS: <span className="text-emerald-400 ml-1">{grandTotalMandays.toFixed(2)}</span>
-            </div>
+          <div className="flex flex-col items-end">
+            <p className="text-slate-500 dark:text-slate-400 text-xs mt-1 font-mono">Found {data.length} projects</p>
+          </div>
+          <div className="text-right">
+            <div className="text-sm text-slate-500 dark:text-slate-400">Total Working Days</div>
+            <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400 font-mono">{totalWorkingDays} days</div>
           </div>
         </div>
         
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="bg-slate-900 text-slate-500 text-xs uppercase font-mono tracking-wider border-b border-slate-800">
-                <th className="px-6 py-3 font-medium">Project / Task</th>
-                <th className="px-6 py-3 font-medium text-right">Manhours</th>
-                <th className="px-6 py-3 font-medium text-right">Mandays</th>
+              <tr className="bg-slate-50 dark:bg-slate-950/50 text-slate-500 dark:text-slate-400 text-sm uppercase tracking-wider font-mono">
+                <th className="p-4 font-medium border-b border-slate-200 dark:border-slate-800">Project Name</th>
+                <th className="p-4 font-medium border-b border-slate-200 dark:border-slate-800 text-right">Start Date</th>
+                <th className="p-4 font-medium border-b border-slate-200 dark:border-slate-800 text-right">End Date</th>
+                <th className="p-4 font-medium border-b border-slate-200 dark:border-slate-800 text-right">Total Hours</th>
+                <th className="p-4 font-medium border-b border-slate-200 dark:border-slate-800 text-right">Mandays</th>
+                <th className="p-4 font-medium border-b border-slate-200 dark:border-slate-800 text-center">Tasks</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-800 font-mono text-sm">
+            <tbody className="divide-y divide-slate-100 dark:divide-slate-800/50">
               {data.map((project) => (
-                <React.Fragment key={project.projectName}>
-                  <tr className="bg-slate-900/50 hover:bg-slate-800/50 transition-colors">
-                    <td className="px-6 py-3 font-bold text-slate-200">
+                <tr 
+                  key={project.projectName} 
+                  className="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors group"
+                >
+                  <td className="p-4">
+                    <div className="font-semibold text-slate-700 dark:text-slate-200 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
                       {project.projectName}
-                    </td>
-                    <td className="px-6 py-3 text-right text-slate-300 font-medium">
-                      {project.totalManhours.toFixed(2)}
-                    </td>
-                    <td className="px-6 py-3 text-right text-emerald-400 font-medium">
-                      {project.totalMandays.toFixed(2)}
-                    </td>
-                  </tr>
-                  {project.tasks.map((task) => (
-                    <tr key={`${project.projectName}-${task.taskName}`} className="hover:bg-slate-800/30 transition-colors">
-                      <td className="px-6 py-2 pl-10 text-slate-400 flex items-center gap-2">
-                        <span className="w-1.5 h-1.5 rounded-full bg-slate-700"></span>
-                        {task.taskName}
-                      </td>
-                      <td className="px-6 py-2 text-right text-slate-500">
-                        {task.manhours.toFixed(2)}
-                      </td>
-                      <td className="px-6 py-2 text-right text-slate-500">
-                        {task.mandays.toFixed(2)}
-                      </td>
-                    </tr>
-                  ))}
-                </React.Fragment>
+                    </div>
+                  </td>
+                  <td className="p-4 text-right font-mono text-slate-600 dark:text-slate-400 text-sm">
+                    {formatDate(project.startDate)}
+                  </td>
+                  <td className="p-4 text-right font-mono text-slate-600 dark:text-slate-400 text-sm">
+                    {formatDate(project.endDate)}
+                  </td>
+                  <td className="p-4 text-right font-mono font-medium text-slate-700 dark:text-slate-300">
+                    {project.totalManhours.toFixed(2)}
+                  </td>
+                  <td className="p-4 text-right font-mono font-medium text-blue-600 dark:text-blue-400">
+                    {project.totalMandays.toFixed(2)}
+                  </td>
+                  <td className="p-4 text-center">
+                    <span className="inline-flex items-center justify-center px-2 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-xs font-medium text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700">
+                      {project.tasks.length}
+                    </span>
+                  </td>
+                </tr>
               ))}
             </tbody>
+            <tfoot>
+              <tr className="bg-slate-50 dark:bg-slate-900/80 font-mono text-sm">
+                <td className="p-4 font-bold text-slate-800 dark:text-slate-200">TOTAL</td>
+                <td colSpan={2}></td>
+                <td className="p-4 text-right font-bold text-emerald-600 dark:text-emerald-400 border-t border-slate-200 dark:border-slate-700">
+                  {grandTotalManhours.toFixed(2)}
+                </td>
+                <td className="p-4 text-right font-bold text-blue-600 dark:text-blue-400 border-t border-slate-200 dark:border-slate-700">
+                  {grandTotalMandays.toFixed(2)}
+                </td>
+                <td></td>
+              </tr>
+            </tfoot>
           </table>
         </div>
-      </div>
-      
-      <div className="mt-2 text-center text-slate-500 text-xs">
-        <span className="inline-block w-2 h-2 bg-green-500 rounded-full mr-2 animate-pulse"></span>
-        System Ready
       </div>
     </div>
   );

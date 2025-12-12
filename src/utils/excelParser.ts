@@ -43,6 +43,28 @@ const parseHours = (timeStr: string): number => {
   return 0;
 };
 
+export const parseDate = (dateStr: string): Date | null => {
+  if (!dateStr) return null;
+  const timestamp = Date.parse(dateStr);
+  if (!isNaN(timestamp)) {
+    return new Date(timestamp);
+  }
+  // Handle DD/MM/YYYY if standard parse fails
+  const parts = dateStr.split(/[/.-]/);
+  if (parts.length === 3) {
+    // Assuming DD/MM/YYYY or DD-MM-YYYY
+    const day = parseInt(parts[0], 10);
+    const month = parseInt(parts[1], 10) - 1;
+    const year = parseInt(parts[2], 10);
+    if (!isNaN(day) && !isNaN(month) && !isNaN(year)) {
+       // Simple check for 2-digit years
+       const fullYear = year < 100 ? 2000 + year : year;
+       return new Date(fullYear, month, day);
+    }
+  }
+  return null;
+};
+
 export const calculateTimesheetSummary = (data: TimesheetRow[]): Omit<TimesheetSummary, 'rawRows'> => {
   // First, group by date to count records per day
   const recordsByDate = new Map<string, number>();
@@ -54,6 +76,8 @@ export const calculateTimesheetSummary = (data: TimesheetRow[]): Omit<TimesheetS
   });
   
   const summaryMap = new Map<string, Map<string, { manhours: number, mandays: number }>>();
+  // Track all date timestamps for each project to find gaps
+  const projectDates = new Map<string, number[]>();
 
   data.forEach(row => {
     if (row.Status === 'Reject') return;
@@ -85,13 +109,65 @@ export const calculateTimesheetSummary = (data: TimesheetRow[]): Omit<TimesheetS
     
     summaryMap.get(projectName)!.set(taskName, {
       manhours: current.manhours + hours,
-      mandays: current.mandays + (hours / 8) // Mandays are now always hours / 8
+      mandays: current.mandays + (hours / 8) // Mandays are currently hours / 8
     });
+
+    // Track Dates
+    const rowDate = parseDate(row.Date);
+    if (rowDate) {
+      const time = rowDate.getTime();
+      if (!projectDates.has(projectName)) {
+        projectDates.set(projectName, []);
+      }
+      projectDates.get(projectName)!.push(time);
+    }
   });
 
   const summaries: ProjectSummary[] = [];
 
   summaryMap.forEach((taskMap, projectName) => {
+    // Process dates for this project to find ranges
+    const dates = projectDates.get(projectName) || [];
+    const ranges: { start: string; end: string }[] = [];
+    let startDate = '';
+    let endDate = '';
+
+    if (dates.length > 0) {
+      // Sort dates
+      dates.sort((a, b) => a - b);
+      
+      let currentStart = dates[0];
+      let currentEnd = dates[0];
+      
+      // One day in ms
+      const ONE_DAY = 1000 * 60 * 60 * 24;
+      // Gap threshold: 30 days
+      const GAP_THRESHOLD = ONE_DAY * 30;
+
+      for (let i = 1; i < dates.length; i++) {
+        const date = dates[i];
+        if (date - currentEnd > GAP_THRESHOLD) {
+          // Gap found, push current range
+          ranges.push({
+            start: new Date(currentStart).toISOString(),
+            end: new Date(currentEnd).toISOString()
+          });
+          // Start new range
+          currentStart = date;
+        }
+        currentEnd = date;
+      }
+      
+      // Push final range
+      ranges.push({
+        start: new Date(currentStart).toISOString(),
+        end: new Date(currentEnd).toISOString()
+      });
+
+      // Set overall start/end
+      startDate = new Date(dates[0]).toISOString();
+      endDate = new Date(dates[dates.length - 1]).toISOString();
+    }
     const tasks: { taskName: string; manhours: number; mandays: number }[] = [];
     let totalManhours = 0;
     let totalMandays = 0;
@@ -113,12 +189,19 @@ export const calculateTimesheetSummary = (data: TimesheetRow[]): Omit<TimesheetS
       projectName,
       tasks,
       totalManhours,
-      totalMandays
+      totalMandays,
+      startDate,
+      endDate,
+      dateRanges: ranges
     });
   });
 
-  // Sort projects by totalManhours ascending
-  summaries.sort((a, b) => a.totalManhours - b.totalManhours);
+  // Sort projects by startDate ascending
+  summaries.sort((a, b) => {
+    if (!a.startDate) return 1;
+    if (!b.startDate) return -1;
+    return new Date(a.startDate).getTime() - new Date(b.startDate).getTime();
+  });
 
   return {
     projects: summaries,
