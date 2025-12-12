@@ -86,8 +86,8 @@ export const TimelineView = ({ data }: TimelineViewProps) => {
 
           <div className="space-y-4">
             {data.map((project) => {
-              const left = getPosition(project.startDate);
-              const right = getPosition(project.endDate);
+              // const left = getPosition(project.startDate);
+              // const right = getPosition(project.endDate);
 
               if (!project.startDate || !project.endDate) return null;
 
