@@ -13,6 +13,8 @@ interface SummaryTableProps {
 export const SummaryTable: React.FC<SummaryTableProps> = ({ data, totalWorkingDays }) => {
   if (data.length === 0) return null;
 
+  const sortedData = [...data].sort((a, b) => b.totalMandays - a.totalMandays);
+
   const grandTotalManhours = data.reduce((sum, project) => sum + project.totalManhours, 0);
   const grandTotalMandays = data.reduce((sum, project) => sum + project.totalMandays, 0);
 
@@ -22,10 +24,10 @@ export const SummaryTable: React.FC<SummaryTableProps> = ({ data, totalWorkingDa
 
   const formatDate = (dateStr: string) => {
     if (!dateStr) return '-';
-    return new Date(dateStr).toLocaleDateString('th-TH', {
+    return new Date(dateStr).toLocaleDateString('en-GB', {
       day: '2-digit',
       month: 'short',
-      year: '2-digit'
+      year: 'numeric'
     });
   };
 
@@ -67,36 +69,56 @@ export const SummaryTable: React.FC<SummaryTableProps> = ({ data, totalWorkingDa
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800/50">
-              {data.map((project) => (
-                <tr 
-                  key={project.projectName} 
-                  className="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors group"
-                >
-                  <td className="p-4">
-                    <div className="font-semibold text-slate-700 dark:text-slate-200 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
-                      {project.projectName}
-                    </div>
-                  </td>
-                  <td className="p-4 text-right font-mono text-slate-600 dark:text-slate-400 text-sm">
-                    {formatDate(project.startDate)}
-                  </td>
-                  <td className="p-4 text-right font-mono text-slate-600 dark:text-slate-400 text-sm">
-                    {formatDate(project.endDate)}
-                  </td>
-                  <td className="p-4 text-right font-mono font-medium text-slate-700 dark:text-slate-300">
-                    {project.totalManhours.toFixed(2)}
-                  </td>
-                  <td className="p-4 text-right font-mono font-medium text-blue-600 dark:text-blue-400">
-                    {project.totalMandays.toFixed(2)}
-                  </td>
-                  <td className="p-4 text-center">
-                    <span className="inline-flex items-center justify-center px-2 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-xs font-medium text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700">
-                      {project.tasks.length}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
+              {sortedData.map((project) => (
+                <React.Fragment key={project.projectName}>
+                  <tr 
+                    className="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors group bg-slate-50/50 dark:bg-slate-900/50"
+                  >
+                    <td className="p-4">
+                      <div className="font-semibold text-slate-700 dark:text-slate-200 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
+                        {project.projectName}
+                      </div>
+                    </td>
+                    <td className="p-4 text-right font-mono text-slate-600 dark:text-slate-400 text-sm">
+                      {formatDate(project.startDate)}
+                    </td>
+                    <td className="p-4 text-right font-mono text-slate-600 dark:text-slate-400 text-sm">
+                      {formatDate(project.endDate)}
+                    </td>
+                    <td className="p-4 text-right font-mono font-medium text-slate-700 dark:text-slate-300">
+                      {project.totalManhours.toFixed(2)}
+                    </td>
+                    <td className="p-4 text-right font-mono font-medium text-blue-600 dark:text-blue-400">
+                      {project.totalMandays.toFixed(2)}
+                    </td>
+                    <td className="p-4 text-center">
+                      <span className="inline-flex items-center justify-center px-2 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-xs font-medium text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700">
+                        {project.tasks.length}
+                      </span>
+                    </td>
+                  </tr>
+                  {/* Task Sub-rows */}
+                  {project.tasks.map((task, idx) => (
+                    <tr key={`${project.projectName}-task-${idx}`} className="hover:bg-slate-50 dark:hover:bg-slate-800/20">
+                      <td className="p-2 py-2 pl-12 border-l-4 border-transparent hover:border-slate-300 dark:hover:border-slate-600">
+                         <div className="text-sm text-slate-600 dark:text-slate-400 font-mono flex items-center gap-2">
+                            <span className="w-1.5 h-1.5 rounded-full bg-slate-300 dark:bg-slate-600"></span>
+                            {task.taskName}
+                         </div>
+                      </td>
+                      <td className="p-2"></td>
+                      <td className="p-2"></td>
+                      <td className="p-2 text-right font-mono text-sm text-slate-500 dark:text-slate-500">
+                         {task.manhours.toFixed(2)}
+                      </td>
+                      <td className="p-2 text-right font-mono text-sm text-slate-500 dark:text-slate-500">
+                         {task.mandays.toFixed(2)}
+                      </td>
+                      <td className="p-2"></td>
+                    </tr>
+                  ))}
+                </React.Fragment>
+              ))}            </tbody>
             <tfoot>
               <tr className="bg-slate-50 dark:bg-slate-900/80 font-mono text-sm">
                 <td className="p-4 font-bold text-slate-800 dark:text-slate-200">TOTAL</td>

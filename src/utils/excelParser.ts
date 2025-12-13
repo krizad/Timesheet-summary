@@ -78,6 +78,7 @@ export const calculateTimesheetSummary = (data: TimesheetRow[]): Omit<TimesheetS
   const summaryMap = new Map<string, Map<string, { manhours: number, mandays: number }>>();
   // Track all date timestamps for each project to find gaps
   const projectDates = new Map<string, number[]>();
+  const projectDailyMandays = new Map<string, Map<number, number>>();
 
   data.forEach(row => {
     if (row.Status === 'Reject') return;
@@ -118,8 +119,13 @@ export const calculateTimesheetSummary = (data: TimesheetRow[]): Omit<TimesheetS
       const time = rowDate.getTime();
       if (!projectDates.has(projectName)) {
         projectDates.set(projectName, []);
+        projectDailyMandays.set(projectName, new Map());
       }
       projectDates.get(projectName)!.push(time);
+      
+      const dailyMap = projectDailyMandays.get(projectName)!;
+      const currentDaily = dailyMap.get(time) || 0;
+      dailyMap.set(time, currentDaily + (hours / 8));
     }
   });
 
@@ -127,22 +133,25 @@ export const calculateTimesheetSummary = (data: TimesheetRow[]): Omit<TimesheetS
 
   summaryMap.forEach((taskMap, projectName) => {
     // Process dates for this project to find ranges
-    const dates = projectDates.get(projectName) || [];
-    const ranges: { start: string; end: string }[] = [];
+    // Process dates for this project to find ranges
+    const datesRaw = projectDates.get(projectName) || [];
+    // Deduplicate and sort dates
+    const dates = Array.from(new Set(datesRaw)).sort((a, b) => a - b);
+    const dailyMap = projectDailyMandays.get(projectName);
+
+    const ranges: { start: string; end: string; mandays: number }[] = [];
     let startDate = '';
     let endDate = '';
 
     if (dates.length > 0) {
-      // Sort dates
-      dates.sort((a, b) => a - b);
-      
       let currentStart = dates[0];
       let currentEnd = dates[0];
+      let currentRangeMandays = dailyMap?.get(currentStart) || 0;
       
       // One day in ms
       const ONE_DAY = 1000 * 60 * 60 * 24;
-      // Gap threshold: 30 days
-      const GAP_THRESHOLD = ONE_DAY * 30;
+      // Gap threshold: 5 days for normal projects, 1 day for Leave (strictly consecutive)
+      const GAP_THRESHOLD = ONE_DAY * (projectName === 'Leave' ? 1 : 5);
 
       for (let i = 1; i < dates.length; i++) {
         const date = dates[i];
@@ -150,18 +159,22 @@ export const calculateTimesheetSummary = (data: TimesheetRow[]): Omit<TimesheetS
           // Gap found, push current range
           ranges.push({
             start: new Date(currentStart).toISOString(),
-            end: new Date(currentEnd).toISOString()
+            end: new Date(currentEnd).toISOString(),
+            mandays: Number(currentRangeMandays.toFixed(2))
           });
           // Start new range
           currentStart = date;
+          currentRangeMandays = 0;
         }
         currentEnd = date;
+        currentRangeMandays += dailyMap?.get(date) || 0;
       }
       
       // Push final range
       ranges.push({
         start: new Date(currentStart).toISOString(),
-        end: new Date(currentEnd).toISOString()
+        end: new Date(currentEnd).toISOString(),
+        mandays: Number(currentRangeMandays.toFixed(2))
       });
 
       // Set overall start/end
@@ -219,6 +232,7 @@ export const processTimesheetData = (data: TimesheetRow[]): TimesheetSummary => 
 
 export const exportToExcel = (data: TimesheetSummary, filename: string = 'timesheet_summary.xlsx') => {
   // Flatten data for export
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const rows: any[] = [];
   
   // Add Summary Header

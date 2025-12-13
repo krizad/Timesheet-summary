@@ -173,7 +173,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ data }) => {
       
       <div className="flex justify-end">
         <button
-          onClick={() => downloadAsImage('dashboard-view', 'dashboard-export')}
+          onClick={() => downloadAsImage('dashboard-content', 'dashboard-export')}
           className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg text-slate-600 dark:text-slate-400 hover:text-emerald-500 dark:hover:text-emerald-500 hover:border-emerald-500/50 transition-colors shadow-sm text-sm font-bold"
         >
           <Download className="w-4 h-4" />
@@ -268,6 +268,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ data }) => {
 
       </div>
 
+      <div id="dashboard-content" className="space-y-8">
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-lg shadow-lg relative overflow-hidden group hover:border-emerald-500/50 transition-colors">
@@ -394,6 +395,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ data }) => {
           </div>
         </div>
 
+      </div>
       </div>
     </div>
   );

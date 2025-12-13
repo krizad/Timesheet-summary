@@ -51,18 +51,26 @@ export const TimelineView = ({ data }: TimelineViewProps) => {
 
   const formatDate = (dateStr: string) => {
     if (!dateStr) return '-';
-    return new Date(dateStr).toLocaleDateString('th-TH', {
+    return new Date(dateStr).toLocaleDateString('en-GB', {
       day: '2-digit',
       month: 'short',
-      year: '2-digit'
+      year: 'numeric'
     });
+  };
+
+
+  const handleExport = () => {
+    // Determine current theme to set correct background color for export
+    const isDark = document.documentElement.classList.contains('dark');
+    const backgroundColor = isDark ? '#0f172a' : '#ffffff'; // slate-900 : white
+    downloadAsImage('timeline-content', 'timeline-export', { backgroundColor });
   };
 
   return (
     <div id="timeline-view" className="space-y-6 pb-8">
       <div className="flex justify-end">
         <button
-          onClick={() => downloadAsImage('timeline-view', 'timeline-export')}
+          onClick={handleExport}
           className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg text-slate-600 dark:text-slate-400 hover:text-emerald-500 dark:hover:text-emerald-500 hover:border-emerald-500/50 transition-colors shadow-sm text-sm font-bold"
         >
           <Download className="w-4 h-4" />
@@ -70,7 +78,7 @@ export const TimelineView = ({ data }: TimelineViewProps) => {
         </button>
       </div>
 
-      <div className="bg-white dark:bg-slate-900/50 p-6 rounded-xl border border-slate-200 dark:border-slate-800">
+      <div id="timeline-content" className="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800">
         <h2 className="text-xl font-bold text-slate-800 dark:text-white mb-6 flex items-center gap-2">
           <Calendar className="w-5 h-5 text-emerald-500" />
           Project Timeline
@@ -93,11 +101,11 @@ export const TimelineView = ({ data }: TimelineViewProps) => {
 
               return (
                 <div key={project.projectName} className="relative">
-                  <div className="flex justify-between text-xs text-slate-500 dark:text-slate-400 mb-1 px-1">
-                    <span className="font-semibold text-slate-700 dark:text-slate-200 w-1/3 truncate" title={project.projectName}>
+                  <div className="flex justify-between items-end text-sm text-slate-500 dark:text-slate-400 mb-2 px-1">
+                    <span className="font-semibold text-slate-700 dark:text-slate-200 w-[40%] truncate leading-relaxed py-0.5" title={project.projectName}>
                       {project.projectName}
                     </span>
-                    <div className="flex gap-2 font-mono">
+                    <div className="flex gap-2 font-mono text-xs">
                       <span>{formatDate(project.startDate)}</span>
                       <span>-</span>
                       <span>{formatDate(project.endDate)}</span>
@@ -118,7 +126,7 @@ export const TimelineView = ({ data }: TimelineViewProps) => {
                             left: `${rangeLeft}%`, 
                             width: `${rangeWidth}%` 
                           }}
-                          title={`${project.projectName}: ${formatDate(range.start)} - ${formatDate(range.end)}`}
+                          title={`${project.projectName}\n${formatDate(range.start)} - ${formatDate(range.end)}\nMandays: ${range.mandays}`}
                         ></div>
                       );
                     })}
@@ -138,7 +146,7 @@ export const TimelineView = ({ data }: TimelineViewProps) => {
 
           {/* Disclaimer */}
           <div className="mt-8 p-4 bg-slate-50 dark:bg-slate-950/50 rounded-lg border border-slate-200 dark:border-slate-800/50 text-xs text-slate-500 italic">
-            <span className="font-semibold text-slate-700 dark:text-slate-400">Note:</span> This report is generated automatically from the uploaded data. Manhours and Mandays are calculated estimates. Timeline visualization groups continuous work periods; gaps larger than 30 days are displayed as breaks.
+            <span className="font-semibold text-slate-700 dark:text-slate-400">Note:</span> This report is generated automatically from the uploaded data. Manhours and Mandays are calculated estimates. Timeline visualization groups continuous work periods; gaps larger than 5 days are displayed as breaks.
           </div>
         </div>
       </div>

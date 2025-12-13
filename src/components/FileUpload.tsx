@@ -60,7 +60,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileUpload, isLoading }) => {
 
   return (
     <div 
-      className={`relative w-full max-w-xl mx-auto p-8 border border-dashed rounded transition-all duration-300 ease-in-out cursor-pointer group ${
+      className={`relative w-full max-w-md mx-auto p-4 border border-dashed rounded transition-all duration-300 ease-in-out cursor-pointer group ${
         dragActive 
           ? "border-green-500 bg-green-500/5" 
           : "border-slate-700 bg-slate-900/50 hover:border-slate-500 hover:bg-slate-900"
@@ -79,10 +79,10 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileUpload, isLoading }) => {
         onChange={handleChange}
       />
 
-      <div className="flex flex-col items-center justify-center text-center space-y-4 font-mono">
+      <div className="flex flex-col items-center justify-center text-center space-y-2 font-mono">
         {fileName ? (
           <>
-            <div className="p-4 bg-green-500/10 rounded-full border border-green-500/20">
+            <div className="p-3 bg-green-500/10 rounded-full border border-green-500/20">
               <FileSpreadsheet className="w-8 h-8 text-green-500" />
             </div>
             <div className="flex items-center gap-2 bg-slate-800 px-3 py-1 rounded border border-slate-700">
@@ -99,18 +99,18 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileUpload, isLoading }) => {
           </>
         ) : (
           <>
-            <div className={`p-4 rounded-full transition-colors ${dragActive ? "bg-green-500/10" : "bg-slate-800"}`}>
+            <div className={`p-3 rounded-full transition-colors ${dragActive ? "bg-green-500/10" : "bg-slate-800"}`}>
               {isLoading ? (
                 <div className="animate-spin h-8 w-8 border-2 border-green-500 border-t-transparent rounded-full"></div>
               ) : (
-                <Upload className={`w-8 h-8 ${dragActive ? "text-green-500" : "text-slate-400 group-hover:text-slate-300"}`} />
+                <Upload className={`w-6 h-6 ${dragActive ? "text-green-500" : "text-slate-400 group-hover:text-slate-300"}`} />
               )}
             </div>
             <div>
               <p className="text-slate-300 text-sm">
                 <span className="text-green-500">$</span> {isLoading ? 'processing...' : 'upload_file'} <span className="animate-pulse">_</span>
               </p>
-              <p className="text-xs text-slate-500 mt-2">
+              <p className="text-xs text-slate-500">
                 Drag & drop or click to select .xlsx
               </p>
             </div>

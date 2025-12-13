@@ -20,7 +20,7 @@ export interface ProjectSummary {
   totalMandays: number;
   startDate: string;
   endDate: string;
-  dateRanges: { start: string; end: string }[];
+  dateRanges: { start: string; end: string; mandays: number }[];
 }
 
 export interface TimesheetSummary {
